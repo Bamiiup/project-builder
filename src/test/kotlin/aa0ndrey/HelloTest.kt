@@ -1,0 +1,8 @@
+package aa0ndrey
+
+import org.junit.Test
+import kotlin.test.assertEquals
+
+class HelloTest {
+
+}
