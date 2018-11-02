@@ -4,30 +4,23 @@ import aa0ndrey.projectbuilder.core.MessageBroker
 import aa0ndrey.projectbuilder.core.MessageBrokerListener
 import java.util.UUID
 
-class TaskExecutorPool(val allExecutors: List<TaskExecutorImpl>) {
+//TODO: make notListen when it is not needed
+class TaskExecutorPool(val allExecutors: List<TaskExecutor>) {
 
-    val runningExecutors = LinkedHashSet<TaskExecutorImpl>()
-    val waitingExecutors = LinkedHashSet<TaskExecutorImpl>()
-    val failedExecutors = LinkedHashSet<TaskExecutorImpl>()
-    val finishedExecutors = LinkedHashSet<TaskExecutorImpl>()
+    val runningExecutors = LinkedHashSet<TaskExecutor>()
+    val waitingExecutors = LinkedHashSet<TaskExecutor>()
+    val failedExecutors = LinkedHashSet<TaskExecutor>()
+    val finishedExecutors = LinkedHashSet<TaskExecutor>()
     val id: String = UUID.randomUUID().toString()
     var isStarted = false
-
-    init {
-        allExecutors.forEach { executor ->
-            MessageBroker.listen("taskExecutor.${executor.id}.done.${executor.task.name}", doneReceiver)
-            MessageBroker.listen("taskExecutor.${executor.id}.failed.${executor.task.name}", failedReceiver)
-            MessageBroker.listen("taskExecutor.${executor.id}.run.${executor.task.name}", runReceiver)
-        }
-    }
 
     private val doneReceiver = object : MessageBrokerListener {
         override fun receive(message: Any) {
             synchronized(this@TaskExecutorPool) {
-                val executor = message as TaskExecutorImpl
+                val executor = message as TaskExecutor
                 runningExecutors -= executor
                 finishedExecutors += executor
-                MessageBroker.send("taskExecutorPool.$id.updated", this)
+                MessageBroker.send("taskExecutorPool.$id.updated", this@TaskExecutorPool)
             }
         }
     }
@@ -35,11 +28,11 @@ class TaskExecutorPool(val allExecutors: List<TaskExecutorImpl>) {
     private val failedReceiver = object : MessageBrokerListener {
         override fun receive(message: Any) {
             synchronized(this@TaskExecutorPool) {
-                val executor = message as TaskExecutorImpl
+                val executor = message as TaskExecutor
                 runningExecutors -= executor
                 failedExecutors += executor
                 stop()
-                MessageBroker.send("taskExecutorPool.$id.updated", this)
+                MessageBroker.send("taskExecutorPool.$id.updated", this@TaskExecutorPool)
             }
         }
     }
@@ -47,11 +40,19 @@ class TaskExecutorPool(val allExecutors: List<TaskExecutorImpl>) {
     private val runReceiver = object : MessageBrokerListener {
         override fun receive(message: Any) {
             synchronized(this@TaskExecutorPool) {
-                val executor = message as TaskExecutorImpl
+                val executor = message as TaskExecutor
                 waitingExecutors -= executor
                 runningExecutors += executor
-                MessageBroker.send("taskExecutorPool.$id.updated", this)
+                MessageBroker.send("taskExecutorPool.$id.updated", this@TaskExecutorPool)
             }
+        }
+    }
+
+    init {
+        allExecutors.forEach { executor ->
+            MessageBroker.listen("taskExecutor.${executor.id}.done", doneReceiver)
+            MessageBroker.listen("taskExecutor.${executor.id}.failed", failedReceiver)
+            MessageBroker.listen("taskExecutor.${executor.id}.run", runReceiver)
         }
     }
 

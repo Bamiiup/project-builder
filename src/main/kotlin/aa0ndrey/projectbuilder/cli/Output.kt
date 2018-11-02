@@ -9,39 +9,50 @@ class Output {
 
     fun add(taskExecutorPool: TaskExecutorPool) {
         MessageBroker.listen("taskExecutorPool.${taskExecutorPool.id}.updated", updateListener)
-        print(taskExecutorPool)
     }
 
     private val updateListener = object : MessageBrokerListener {
         override fun receive(message: Any) {
-            print(message as TaskExecutorPool)
+            synchronized(this) {
+                val taskExecutorPool = message as TaskExecutorPool
+
+                print(taskExecutorPool)
+
+                //TODO: move from here and add status for task executor pool
+                if ((!taskExecutorPool.failedExecutors.isEmpty())
+                    || (taskExecutorPool.finishedExecutors.size == taskExecutorPool.allExecutors.size)) {
+                    MessageBroker.notListen("taskExecutorPool.${taskExecutorPool.id}.updated", this)
+                }
+            }
         }
     }
 
     private fun print(pool: TaskExecutorPool) {
         println()
         println(Date())
-        if (pool.isStarted) {
+        if (!pool.finishedExecutors.isEmpty()) {
             println("COMPLETED:")
             pool.finishedExecutors.forEach {
                 println(" - ${it.task.name}")
             }
+        }
+        if (!pool.runningExecutors.isEmpty()) {
             println("RUNNING:")
             pool.runningExecutors.forEach {
                 println(" - ${it.task.name}")
             }
+        }
+        if (!pool.waitingExecutors.isEmpty()) {
             println("WAITING:")
             pool.waitingExecutors.forEach {
                 println(" - ${it.task.name}")
             }
+        }
+        if (!pool.failedExecutors.isEmpty()) {
             println("FAILED:")
             pool.failedExecutors.forEach {
                 println(" - ${it.task.name}")
-            }
-        } else {
-            println("ALL TASKS:")
-            pool.allExecutors.forEach {
-                println(" - ${it.task.name}")
+                it.failedReason!!.printStackTrace()
             }
         }
     }

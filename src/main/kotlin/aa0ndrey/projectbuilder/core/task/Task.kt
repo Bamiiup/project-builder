@@ -1,8 +1,9 @@
 package aa0ndrey.projectbuilder.core.task
 
-interface Task {
-    val name: String
-    val dependencies: List<String>
-
-    fun run()
+open class Task(
+    val name: String,
+    val run: Task.() -> Unit = {},
+    val dependencies: List<String> = listOf()
+) {
+    fun run() = run.invoke(this)
 }

@@ -10,17 +10,17 @@ class TaskExecutorPoolBuilder {
 
         topologicalFillTaskByName(listOf(initialTaskName), taskByName)
 
-        val taskExecutorByTaskName = HashMap<String, TaskExecutorImpl>()
+        val taskExecutorByTaskName = HashMap<String, TaskExecutor>()
 
-        val taskExecutors = taskByName.values.reversed().map { task ->
+        taskByName.values.reversed().forEach { task ->
             val dependentTaskExecutors = task.dependencies.map {
                 taskExecutorByTaskName[it] ?: throw RuntimeException("Cycle dependency!")
             }
 
-            TaskExecutorImpl(task, dependentTaskExecutors)
+            taskExecutorByTaskName += task.name to TaskExecutor(task, dependentTaskExecutors)
         }
 
-        return TaskExecutorPool(taskExecutors)
+        return TaskExecutorPool(taskExecutorByTaskName.values.toList())
     }
 
     private fun topologicalFillTaskByName(initialTaskNames: Collection<String>, filledTaskByName: LinkedHashMap<String, Task>) {
@@ -36,6 +36,10 @@ class TaskExecutorPoolBuilder {
             filledTaskByName += taskName to task
 
             nextInitialTasks += task.dependencies
+        }
+
+        if (nextInitialTasks.size == 0) {
+            return
         }
 
         topologicalFillTaskByName(nextInitialTasks, filledTaskByName)
