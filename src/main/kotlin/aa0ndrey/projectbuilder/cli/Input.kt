@@ -1,6 +1,10 @@
-package aa0ndrey.projectbuilder.CLI
+package aa0ndrey.projectbuilder.cli
 
-object CLI {
+import aa0ndrey.projectbuilder.core.task.TaskExecutorPoolBuilder
+import aa0ndrey.projectbuilder.core.task.TaskFactory
+
+class Input(private val taskFactory: TaskFactory, private val output: Output) {
+
     fun handle(input: String) {
         val inputParts = input.split(' ')
 
@@ -22,6 +26,13 @@ object CLI {
     }
 
     private fun runTasks(taskName: String) {
+        val pool = TaskExecutorPoolBuilder().apply {
+            this@apply.taskFactory = this@Input.taskFactory
+            this.initialTaskName = taskName
+        }.build()
 
+        output.add(pool)
+
+        pool.start()
     }
 }

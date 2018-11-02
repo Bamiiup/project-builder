@@ -4,13 +4,14 @@ import aa0ndrey.projectbuilder.core.MessageBroker
 import aa0ndrey.projectbuilder.core.MessageBrokerListener
 import java.util.UUID
 
-class TaskExecutorPool(private val allExecutors: List<TaskExecutorImpl>) {
+class TaskExecutorPool(val allExecutors: List<TaskExecutorImpl>) {
 
     val runningExecutors = LinkedHashSet<TaskExecutorImpl>()
     val waitingExecutors = LinkedHashSet<TaskExecutorImpl>()
     val failedExecutors = LinkedHashSet<TaskExecutorImpl>()
     val finishedExecutors = LinkedHashSet<TaskExecutorImpl>()
     val id: String = UUID.randomUUID().toString()
+    var isStarted = false
 
     init {
         allExecutors.forEach { executor ->
@@ -56,6 +57,7 @@ class TaskExecutorPool(private val allExecutors: List<TaskExecutorImpl>) {
 
     @Synchronized
     fun start() {
+        isStarted = true
         allExecutors.forEach { it.listeningDependencies() }
         waitingExecutors += allExecutors
         MessageBroker.send("taskExecutorPool.$id.updated", this)
@@ -64,6 +66,7 @@ class TaskExecutorPool(private val allExecutors: List<TaskExecutorImpl>) {
 
     @Synchronized
     fun stop() {
+        isStarted = false
         allExecutors.forEach { it.stop() }
     }
 }
