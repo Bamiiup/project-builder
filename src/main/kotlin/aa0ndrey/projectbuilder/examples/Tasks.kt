@@ -20,7 +20,7 @@ val taskByName = listOf(
     ),
     Task(
         name = "hello3",
-        dependencies = listOf("hello2", "hello1"),
+        dependencies = listOf("hello1", "hello2"),
         run = {
             Thread.sleep(1000L)
             println("Hello3")

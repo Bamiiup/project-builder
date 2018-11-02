@@ -23,13 +23,12 @@ class TaskExecutorPoolBuilder {
         return TaskExecutorPool(taskExecutorByTaskName.values.toList())
     }
 
+    //TODO: if there is cycle you get stack over flow. fix it
     private fun topologicalFillTaskByName(initialTaskNames: Collection<String>, filledTaskByName: LinkedHashMap<String, Task>) {
         val nextInitialTasks = mutableListOf<String>()
 
         initialTaskNames.forEach { taskName ->
-            if (filledTaskByName.contains(taskName)) {
-                return@forEach
-            }
+            filledTaskByName -= taskName
 
             val task = createTask(taskName)
 
