@@ -3,7 +3,7 @@ package aa0ndrey.projectbuilder.core.task
 class TaskExecutorPoolBuilder {
 
     lateinit var initialTaskName: String
-    lateinit var taskFactory: TaskFactory
+    lateinit var taskFactory: ITaskFactory
 
     fun build(): TaskExecutorPool {
         val taskByName = createRawTasks(initialTaskName).also {

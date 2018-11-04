@@ -1,9 +1,9 @@
 package aa0ndrey.projectbuilder.cli
 
+import aa0ndrey.projectbuilder.core.task.ITaskFactory
 import aa0ndrey.projectbuilder.core.task.TaskExecutorPoolBuilder
-import aa0ndrey.projectbuilder.core.task.TaskFactory
 
-class Input(private val taskFactory: TaskFactory, private val output: Output) {
+class Input(private val taskFactory: ITaskFactory, private val output: Output) {
 
     fun handle(input: String) {
         val inputParts = input.split(' ')

@@ -1,5 +1,5 @@
 package aa0ndrey.projectbuilder.core.task
 
-interface TaskFactory {
+interface ITaskFactory {
     fun createTask(taskName: String): Task
 }
