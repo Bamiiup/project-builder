@@ -1,7 +1,7 @@
 package aa0ndrey.projectbuilder.core.task
 
-class TaskBuilder {
-    lateinit var prototype: Task
+class TaskPrototypeBuilder {
+    lateinit var prototype: ITask
     var addedDependencies = mutableListOf<String>()
 
     fun build(): Task {

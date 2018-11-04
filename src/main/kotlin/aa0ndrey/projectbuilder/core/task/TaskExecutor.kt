@@ -2,15 +2,13 @@ package aa0ndrey.projectbuilder.core.task
 
 import aa0ndrey.projectbuilder.core.MessageBroker
 import aa0ndrey.projectbuilder.core.MessageBrokerListener
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 //TODO: make notListen when it is not needed
-class TaskExecutor(task: Task, dependentTaskExecutors: Collection<TaskExecutor>) : MessageBrokerListener {
+class TaskExecutor(val task: ITask, dependentTaskExecutors: Collection<TaskExecutor>) : MessageBrokerListener {
 
     val id: String = UUID.randomUUID().toString()
-
-    val task: Task = task
 
     var failedReason: Throwable? = null
 

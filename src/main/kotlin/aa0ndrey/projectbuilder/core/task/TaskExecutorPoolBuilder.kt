@@ -25,7 +25,11 @@ class TaskExecutorPoolBuilder {
         return TaskExecutorPool(taskExecutorByTaskName.values.toList())
     }
 
-    private fun createRawTasks(initialTaskName: String, taskByName: MutableMap<String, Task> = mutableMapOf()): MutableMap<String, Task> {
+    private fun createRawTasks(
+        initialTaskName: String,
+        taskByName: MutableMap<String, ITask> = mutableMapOf()
+    ): MutableMap<String, ITask> {
+
         if (initialTaskName in taskByName) {
             return taskByName
         }
@@ -37,11 +41,11 @@ class TaskExecutorPoolBuilder {
         return taskByName
     }
 
-    private fun addDependencies(taskByName: MutableMap<String, Task>) {
-        val taskBuilderByName = mutableMapOf<String, TaskBuilder>()
+    private fun addDependencies(taskByName: MutableMap<String, ITask>) {
+        val taskBuilderByName = mutableMapOf<String, TaskPrototypeBuilder>()
         taskByName.flatMap { it.value.addedDependencies }.distinct().map { (from, to) ->
             taskBuilderByName.getOrPut(from) {
-                TaskBuilder().apply {
+                TaskPrototypeBuilder().apply {
                     prototype = taskByName[from]!!
                 }
             }.apply {
@@ -55,9 +59,9 @@ class TaskExecutorPoolBuilder {
     //TODO: if there is cycle you get stack over flow. fix it
     private fun topologicalSort(
         initialTaskNames: Collection<String>,
-        taskByName: Map<String, Task>,
-        result: LinkedHashMap<String, Task> = LinkedHashMap()
-    ): LinkedHashMap<String, Task> {
+        taskByName: Map<String, ITask>,
+        result: LinkedHashMap<String, ITask> = LinkedHashMap()
+    ): LinkedHashMap<String, ITask> {
 
         val nextInitialTasks = mutableListOf<String>()
 
