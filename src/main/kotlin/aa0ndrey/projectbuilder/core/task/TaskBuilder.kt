@@ -2,12 +2,12 @@ package aa0ndrey.projectbuilder.core.task
 
 class TaskBuilder {
     lateinit var prototype: Task
-    lateinit var addDependency: List<String>
+    lateinit var addedDependencies: List<String>
 
     fun build(): Task {
         val dependencies = mutableSetOf<String>()
         dependencies += prototype.dependencies
-        dependencies += addDependency
+        dependencies += addedDependencies
 
         return Task(
             name = prototype.name,
