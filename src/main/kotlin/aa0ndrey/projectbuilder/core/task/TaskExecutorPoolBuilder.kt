@@ -6,13 +6,15 @@ class TaskExecutorPoolBuilder {
     lateinit var taskFactory: TaskFactory
 
     fun build(): TaskExecutorPool {
-        val taskByName = LinkedHashMap<String, Task>()
-
-        topologicalFillTaskByName(listOf(initialTaskName), taskByName)
+        val taskByName = createRawTasks(initialTaskName).also {
+            addDependencies(it)
+        }.let {
+            topologicalSort(listOf(initialTaskName), it)
+        }.entries.reversed().map { it.key to it.value }.toMap()
 
         val taskExecutorByTaskName = HashMap<String, TaskExecutor>()
 
-        taskByName.values.reversed().forEach { task ->
+        taskByName.values.forEach { task ->
             val dependentTaskExecutors = task.dependencies.map {
                 taskExecutorByTaskName[it] ?: throw RuntimeException("Cycle dependency!")
             }
@@ -23,26 +25,56 @@ class TaskExecutorPoolBuilder {
         return TaskExecutorPool(taskExecutorByTaskName.values.toList())
     }
 
+    private fun createRawTasks(initialTaskName: String, taskByName: MutableMap<String, Task> = mutableMapOf()): MutableMap<String, Task> {
+        if (initialTaskName in taskByName) {
+            return taskByName
+        }
+
+        val task = taskFactory.createTask(initialTaskName)
+        taskByName += task.name to task
+        task.dependencies.forEach { createRawTasks(it, taskByName) }
+        task.addedDependencies.forEach { createRawTasks(it.second, taskByName) }
+        return taskByName
+    }
+
+    private fun addDependencies(taskByName: MutableMap<String, Task>) {
+        val taskBuilderByName = mutableMapOf<String, TaskBuilder>()
+        taskByName.flatMap { it.value.addedDependencies }.distinct().map { (from, to) ->
+            taskBuilderByName.getOrPut(from) {
+                TaskBuilder().apply {
+                    prototype = taskByName[from]!!
+                }
+            }.apply {
+                addedDependencies.add(to)
+            }
+        }
+
+        taskBuilderByName.forEach { taskByName[it.key] = it.value.build() }
+    }
+
     //TODO: if there is cycle you get stack over flow. fix it
-    private fun topologicalFillTaskByName(initialTaskNames: Collection<String>, filledTaskByName: LinkedHashMap<String, Task>) {
+    private fun topologicalSort(
+        initialTaskNames: Collection<String>,
+        taskByName: Map<String, Task>,
+        result: LinkedHashMap<String, Task> = LinkedHashMap()
+    ): LinkedHashMap<String, Task> {
+
         val nextInitialTasks = mutableListOf<String>()
 
         initialTaskNames.forEach { taskName ->
-            filledTaskByName -= taskName
+            result -= taskName
 
-            val task = createTask(taskName)
+            val task = taskByName[taskName]!!
 
-            filledTaskByName += taskName to task
+            result[taskName] = task
 
             nextInitialTasks += task.dependencies
         }
 
-        if (nextInitialTasks.size == 0) {
-            return
+        if (nextInitialTasks.isEmpty()) {
+            return result
         }
 
-        topologicalFillTaskByName(nextInitialTasks, filledTaskByName)
+        return topologicalSort(nextInitialTasks, taskByName, result)
     }
-
-    private fun createTask(name: String) = taskFactory.createTask(name)
 }
