@@ -3,6 +3,8 @@ package aa0ndrey.core.task
 import aa0ndrey.projectbuilder.cli.Input
 import aa0ndrey.projectbuilder.cli.Output
 import aa0ndrey.projectbuilder.core.task.Task
+import aa0ndrey.projectbuilder.core.task.TaskBuilder
+import aa0ndrey.projectbuilder.core.task.TaskBuilderFactory
 import org.junit.Assert.assertArrayEquals
 import org.junit.Test
 import java.util.Collections.synchronizedList
@@ -37,7 +39,9 @@ class TaskTest {
                     barrier.await()
                 }
             )
-        )), Output())
+        )), TaskBuilderFactory().apply {
+            putTaskBuilder(Task::class.java, TaskBuilder::class.java)
+        }, Output())
 
         input.handle("C")
         barrier.await()

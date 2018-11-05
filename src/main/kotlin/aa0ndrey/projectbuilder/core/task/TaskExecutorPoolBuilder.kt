@@ -1,9 +1,10 @@
 package aa0ndrey.projectbuilder.core.task
 
-class TaskExecutorPoolBuilder {
-
-    lateinit var initialTaskName: String
-    lateinit var taskFactory: ITaskFactory
+class TaskExecutorPoolBuilder(
+    val initialTaskName: String,
+    val taskFactory: ITaskFactory,
+    val taskBuilderFactory: ITaskBuilderFactory
+) {
 
     fun build(): TaskExecutorPool {
         val taskByName = createRawTasks(initialTaskName).also {
@@ -42,15 +43,16 @@ class TaskExecutorPoolBuilder {
     }
 
     private fun addDependencies(taskByName: MutableMap<String, ITask>) {
-        val taskBuilderByName = mutableMapOf<String, TaskPrototypeBuilder>()
-        taskByName.flatMap { it.value.addedDependencies }.distinct().map { (from, to) ->
-            taskBuilderByName.getOrPut(from) {
-                TaskPrototypeBuilder().apply {
-                    prototype = taskByName[from]!!
+        val taskBuilderByName = mutableMapOf<String, ITaskBuilder>()
+        taskByName.flatMap { it.value.addedDependencies }.distinct().forEach { (from, to) ->
+            val taskBuilder = taskBuilderByName.getOrPut(from) {
+                val prototype = taskByName[from]!!
+                return@getOrPut taskBuilderFactory.getTaskBuilder(prototype::class.java).apply {
+                    useAsPrototype(prototype)
                 }
-            }.apply {
-                addedDependencies.add(to)
             }
+
+            taskBuilder.dependencies.add(to)
         }
 
         taskBuilderByName.forEach { taskByName[it.key] = it.value.build() }

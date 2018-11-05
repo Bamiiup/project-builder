@@ -3,8 +3,8 @@ package aa0ndrey.projectbuilder.log
 import aa0ndrey.projectbuilder.core.task.ITask
 
 interface ILoggableTask : ITask {
-    val outputLog: String
-    val errorLog: String
+    var outputLog: String
+    var errorLog: String
     val exceptionLogPatterns: Collection<String>
 
     fun checkIfLogsDontHavePatterns() {

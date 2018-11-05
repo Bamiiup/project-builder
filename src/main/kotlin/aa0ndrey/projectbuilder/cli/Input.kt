@@ -1,9 +1,10 @@
 package aa0ndrey.projectbuilder.cli
 
+import aa0ndrey.projectbuilder.core.task.ITaskBuilderFactory
 import aa0ndrey.projectbuilder.core.task.ITaskFactory
 import aa0ndrey.projectbuilder.core.task.TaskExecutorPoolBuilder
 
-class Input(private val taskFactory: ITaskFactory, private val output: Output) {
+class Input(private val taskFactory: ITaskFactory, private val taskBuilderFactory: ITaskBuilderFactory, private val output: Output) {
 
     fun handle(input: String) {
         val inputParts = input.split(' ')
@@ -19,17 +20,14 @@ class Input(private val taskFactory: ITaskFactory, private val output: Output) {
     }
 
     private fun dispatchToCommandHandler(commandName: String, commandArguments: List<String>) {
-        when(commandName) {
+        when (commandName) {
             "run" -> runTasks(commandName)
             else -> runTasks(commandName)
         }
     }
 
     private fun runTasks(taskName: String) {
-        val pool = TaskExecutorPoolBuilder().apply {
-            this@apply.taskFactory = this@Input.taskFactory
-            this.initialTaskName = taskName
-        }.build()
+        val pool = TaskExecutorPoolBuilder(taskName, this@Input.taskFactory, taskBuilderFactory).build()
 
         output.add(pool)
 

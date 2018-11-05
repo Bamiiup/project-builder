@@ -3,8 +3,9 @@ package aa0ndrey.core.log
 import aa0ndrey.core.task.TaskFactory
 import aa0ndrey.projectbuilder.cli.Input
 import aa0ndrey.projectbuilder.cli.Output
-import aa0ndrey.projectbuilder.core.task.ITask
-import aa0ndrey.projectbuilder.log.ILoggableTask
+import aa0ndrey.projectbuilder.core.task.TaskBuilderFactory
+import aa0ndrey.projectbuilder.log.LoggableTask
+import aa0ndrey.projectbuilder.log.LoggableTaskBuilder
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.util.concurrent.CyclicBarrier
@@ -17,32 +18,26 @@ class LoggableTaskTest {
         val barrier = CyclicBarrier(2)
 
         val input = Input(TaskFactory(listOf(
-            object: ILoggableTask {
-                override val outputLog: String
-                    get() = "some text, but all is ok"
-                override val errorLog: String
-                    get() = "there is error"
-                override val exceptionLogPatterns: Collection<String>
-                    get() = listOf("error")
-                override val name: String
-                    get() = "LoggableTask"
-                override val run: ITask.() -> Unit
-                    get() = {
-                        try {
-                            checkIfLogsDontHavePatterns()
-                        } catch (e: RuntimeException) {
-                            exceptionPtr[0] = e
-                            throw e
-                        } finally {
-                            barrier.await()
-                        }
+            LoggableTask(
+                name = "LoggableTask",
+                run = {
+                    try {
+                        (this as LoggableTask).checkIfLogsDontHavePatterns()
+                    } catch(e: RuntimeException) {
+                        exceptionPtr[0] = e
+                        throw e
+                    } finally {
+                        barrier.await()
                     }
-                override val dependencies: List<String>
-                    get() = listOf()
-                override val addedDependencies: List<Pair<String, String>>
-                    get() = listOf()
+                },
+                exceptionLogPatterns = listOf("error")
+            ).apply {
+                outputLog = "some text, but all is ok"
+                errorLog = "there is error"
             }
-        )), Output())
+        )), TaskBuilderFactory().apply {
+            putTaskBuilder(LoggableTask::class.java, LoggableTaskBuilder::class.java)
+        }, Output())
 
         input.handle("LoggableTask")
         barrier.await()
