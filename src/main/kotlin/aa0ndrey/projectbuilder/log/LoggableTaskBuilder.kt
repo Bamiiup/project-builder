@@ -10,8 +10,6 @@ class LoggableTaskBuilder: ITaskBuilder {
     override var dependencies = mutableListOf<String>()
     var addedDependencies = mutableListOf<Pair<String, String>>()
     var exceptionLogPatterns = mutableListOf<String>()
-    var errorLog = ""
-    var outputLog = ""
 
     override fun useAsPrototype(prototype: ITask) {
         if (prototype !is LoggableTask) {
@@ -23,15 +21,10 @@ class LoggableTaskBuilder: ITaskBuilder {
         dependencies = prototype.dependencies.toMutableList()
         addedDependencies = prototype.addedDependencies.toMutableList()
         exceptionLogPatterns = prototype.exceptionLogPatterns.toMutableList()
-        errorLog = prototype.errorLog
-        outputLog = prototype.outputLog
     }
 
     override fun build(): LoggableTask {
-        return LoggableTask(name, run, dependencies, addedDependencies, exceptionLogPatterns).apply {
-            this@apply.errorLog = this@LoggableTaskBuilder.errorLog
-            this@apply.outputLog = this@LoggableTaskBuilder.outputLog
-        }
+        return LoggableTask(name, run, dependencies, addedDependencies, exceptionLogPatterns)
     }
 
 }
