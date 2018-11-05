@@ -6,16 +6,10 @@ import aa0ndrey.projectbuilder.cli.Output
 import aa0ndrey.projectbuilder.core.task.ITask
 import aa0ndrey.projectbuilder.log.ILoggableTask
 import org.junit.Assert.assertEquals
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExpectedException
 import java.util.concurrent.CyclicBarrier
 
 class LoggableTaskTest {
-
-    @field:Rule
-    @JvmField
-    val expectedException = ExpectedException.none()
 
     @Test
     fun taskTest() {
@@ -34,8 +28,6 @@ class LoggableTaskTest {
                     get() = "LoggableTask"
                 override val run: ITask.() -> Unit
                     get() = {
-                        //expectedException.expect(RuntimeException::class.java)
-                        //expectedException.expectMessage()
                         try {
                             checkIfLogsDontHavePatterns()
                         } catch (e: RuntimeException) {
